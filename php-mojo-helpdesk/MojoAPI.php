@@ -52,57 +52,101 @@ class MojoAPI
 
 	public function decodeError($errorMessage){
 		switch ($errorMessage) {
-        	case JSON_ERROR_NONE:
-            	return 'No errors';
-        	break;
-        	case JSON_ERROR_DEPTH:
-            	return 'Maximum stack depth exceeded';
-        	break;
-        	case JSON_ERROR_STATE_MISMATCH:
-            	return 'Underflow or the modes mismatch';
-        	break;
-        	case JSON_ERROR_CTRL_CHAR:
-            	return 'Unexpected control character found';
-        	break;
-        	case JSON_ERROR_SYNTAX:
-            	return 'Syntax error, malformed JSON';
-        	break;
-        	case JSON_ERROR_UTF8:
-            	return 'Malformed UTF-8 characters, possibly incorrectly encoded';
-        	break;
-        	default:
-            	return 'Unknown error';
-        	break;
-    	}
+			case JSON_ERROR_NONE:
+				return 'No errors';
+			break;
+			case JSON_ERROR_DEPTH:
+				return 'Maximum stack depth exceeded';
+			break;
+			case JSON_ERROR_STATE_MISMATCH:
+				return 'Underflow or the modes mismatch';
+			break;
+			case JSON_ERROR_CTRL_CHAR:
+				return 'Unexpected control character found';
+			break;
+			case JSON_ERROR_SYNTAX:
+				return 'Syntax error, malformed JSON';
+			break;
+			case JSON_ERROR_UTF8:
+				return 'Malformed UTF-8 characters, possibly incorrectly encoded';
+			break;
+			default:
+				return 'Unknown error';
+			break;
+		}
 	}
 
 	public function MakeGetCall($url,$timeout=30){
-		echo $url.'<br />';
 		$ch = curl_init();
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_MAXREDIRS, 10 );
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($ch, CURLOPT_MAXREDIRS, 10 );
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-        $output = curl_exec($ch);
-        curl_close($ch);
-        if(substr($output, 0,3) == pack("CCC",0xef,0xbb,0xbf)) {
-        	$output=substr($output, 3);
-    	}
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+		$output = curl_exec($ch);
+		curl_close($ch);
+		if(substr($output, 0,3) == pack("CCC",0xef,0xbb,0xbf)) {
+			$output=substr($output, 3);
+		}
 		return $output;
 
 	}
 
-	public function MakePostCall(){
-		
+	public function MakePostCall($url, $postData, $timeout=10){
+		if(!is_string($postData)){
+			throw new Exception("You must send a string to this function.");
+		}
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($ch, CURLOPT_MAXREDIRS, 10 );
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+		curl_setopt($ch, CURLOPT_HEADER, true);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+			'Content-Type: application/xml',
+			'Content-Length: ' . strlen($postData)
+		));
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+		// execute the request
+		$output = curl_exec($ch);
+		// close curl resource to free up system resources
+		curl_close($ch);
+		return $output;
 	}
 
-	public function MakePutCall(){
-
+	public function MakePutCall($url, $putData){
+		if(!is_string($putData)){
+			throw new Exception("You must send a string to this function.");
+		}
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($ch, CURLOPT_MAXREDIRS, 10 );
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT"); // note the PUT here
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $putData);
+		curl_setopt($ch, CURLOPT_HEADER, true);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+			'Content-Type: application/xml',
+			'Content-Length: ' . strlen($putData)
+		));
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+		// execute the request
+		$output = curl_exec($ch);
+		// close curl resource to free up system resources
+		curl_close($ch);
+		return $output;
 	}
 
 	public function MakeDeleteCall(){
