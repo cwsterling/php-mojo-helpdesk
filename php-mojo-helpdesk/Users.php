@@ -53,7 +53,7 @@ class Users extends MojoAPI
 	}
 
 	public function ShowUser($userID){
-		if(!is_numeric($emailAddress)){
+		if(!is_numeric($userID)){
 			throw new Exception("You must pass a User ID to this use method.");
 		}
 		$url = $this->MojoAPI->GetSiteURL().'/api/users/'.$userID.'.json?access_key='.$this->MojoAPI->GetAPIKey();
@@ -68,8 +68,8 @@ class Users extends MojoAPI
 	    }
 	}
 
-	public function GetUserByEmail($emailAddress){
-		if(!is_string($emailAddress)){
+	public function GetUserByEmail($emailAddress, $strictFilter = true){
+		if($strictFilter && !filter_var($emailAddress, FILTER_VALIDATE_EMAIL)){ ){
 			throw new Exception("You must pass an email address to this use method.");
 		}
 		$url = $this->MojoAPI->GetSiteURL().'/api/users/get_by_email.json?email='.$emailAddress.'&access_key='.$this->MojoAPI->GetAPIKey();
@@ -97,6 +97,11 @@ class Users extends MojoAPI
 					throw new Exception("You have included fields that aren't allowed when creating a user account. See the allowed fields by calling GetAllowedUserFields()");
 				}else{
 					unset($userData[$key]);
+				}
+			}
+			if($key == 'email' && !$override){
+				if(!filter_var($value, FILTER_VALIDATE_EMAIL)){ ){
+					throw new Exception('You must pass a valid email address to create an account. You can override this check by calling CreateUser($userArray,$sendWelcomeEmail=false,$override=true).');
 				}
 			}
 			unset($userFields[$key]);
