@@ -10,9 +10,6 @@
  *
  *              Original author: Chris Sterling <chris@chrissterling.me>
  *
- * @license     Code and contributions have 'MIT License'
- *              More details: https://github.com/serbanghita/Mobile-Detect/blob/master/LICENSE.txt
- *
  *
  * @version     0.0.1
  */
@@ -46,6 +43,139 @@ class Tickets extends MojoAPI
 		    return $decodedResponse;
 	    }
 	}
+	//completed
+	public function ListTicketsByStatus($ticketStatus, $sortField="created_on", $perPage=25,$offset=0,$reverse=true){
+		if(!is_array($ticketStatus)){
+			throw new Exception("Array must be passed. For valid list of ticket options, call GetTicketStatusOptions()");
+		}
+		$reverseFunction = '&r=';
+		if($reverse){
+			$reverseFunction .= '1';
+		}else{
+			$reverseFunction .= '0';
+		}
+		$url = $this->MojoAPI->GetSiteURL().'/api/tickets/search.json?query=status.id:('.urlencode(implode(' OR ', $ticketStatus)).')&access_key='.$this->MojoAPI->GetAPIKey().'&per_page='.$perPage.'&page='.$offset.'&sf='.$sortField.'&r=1';
+		echo $url;
+		$tickets = $this->MojoAPI->MakeGetCall($url);
+
+		$decodedResponse = json_decode($tickets);
+
+		if(json_last_error()){
+		    throw new Exception($this->MojoAPI->decodeError(json_last_error()));
+	    }else{
+		    return $decodedResponse;
+	    }
+	}
+	//completed
+	public function SearchForTickets($ticketStatus, $sortField="created_on", $perPage=25,$offset=0,$reverse=true){
+		if(!is_array($ticketStatus)){
+			throw new Exception("Array must be passed. For valid list of ticket options, call GetSearchFields()");
+		}
+		$reverseFunction = '&r=';
+		if($reverse){
+			$reverseFunction .= '1';
+		}else{
+			$reverseFunction .= '0';
+		}
+		$searchString = '';
+		foreach($ticketStatus as $key=>$value){
+			$searchString .= $key.':('.$value.') AND ';
+		}
+
+		$searchString = urlencode(substr($searchString,0,-5));
+		echo $searchString.'<br />';
+		
+		$url = $this->MojoAPI->GetSiteURL().'/api/tickets/search.json?query='.$searchString.'&access_key='.$this->MojoAPI->GetAPIKey().'&per_page='.$perPage.'&page='.$offset.'&sf='.$sortField.'&r=1';
+		echo $url.'<br />';
+		$tickets = $this->MojoAPI->MakeGetCall($url);
+
+		$decodedResponse = json_decode($tickets);
+
+		if(json_last_error()){
+		    throw new Exception($this->MojoAPI->decodeError(json_last_error()));
+	    }else{
+		    return $decodedResponse;
+	    }
+	}
+
+	//completed
+	public function GetTicketByID($ticketID){
+		if(!is_numeric($ticketID)){
+			throw new Exception('Passed Ticket ID is not numberic.');
+		}
+		$url = $this->MojoAPI->GetSiteURL().'/api/tickets/'.$ticketID.'.json?access_key='.$this->MojoAPI->GetAPIKey().'&per_page='.$perPage.'&page='.$offset;
+		$tickets = $this->MojoAPI->MakeGetCall($url);
+
+		$decodedResponse = json_decode($tickets);
+
+		if(json_last_error()){
+		    throw new Exception($this->MojoAPI->decodeError(json_last_error()));
+	    }else{
+		    return $decodedResponse;
+	    }
+	}
+	//completed
+	public function GetTicketComments($ticketID){
+		if(!is_numeric($ticketID)){
+			throw new Exception('Passed Ticket ID is not numberic.');
+		}
+		$url = $this->MojoAPI->GetSiteURL().'/api/tickets/'.$ticketID.'/comments.json?access_key='.$this->MojoAPI->GetAPIKey();
+		$comments = $this->MojoAPI->MakeGetCall($url);
+		$decodedResponse = json_decode($comments);
+
+		if(json_last_error()){
+		    throw new Exception($this->MojoAPI->decodeError(json_last_error()));
+	    }else{
+		    return $decodedResponse;
+	    }
+
+	}
+	//completed
+	public function GetTicketQueues($perPage=25,$offset=0, $reverse=true){
+		$reverseFunction = '&r=';
+		if($reverse){
+			$reverseFunction .= '1';
+		}else{
+			$reverseFunction .= '0';
+		}
+		$url = $this->MojoAPI->GetSiteURL().'/api/ticket_queues.json?access_key='.$this->MojoAPI->GetAPIKey().'&per_page='.$perPage.'&page='.$offset;
+		$comments = $this->MojoAPI->MakeGetCall($url);
+		$decodedResponse = json_decode($comments);
+
+		if(json_last_error()){
+		    throw new Exception($this->MojoAPI->decodeError(json_last_error()));
+	    }else{
+		    return $decodedResponse;
+	    }
+
+	}
+
+	//completed
+	public function GetAllTicketsInQueue($queueID){
+		if(!is_numeric($queueID)){
+			throw new Exception('Passed Queue ID is not numberic.');
+		}
+		$url = $this->MojoAPI->GetSiteURL().'/api/ticket_queues/'.$queueID.'.json?access_key='.$this->MojoAPI->GetAPIKey();
+		$comments = $this->MojoAPI->MakeGetCall($url);
+		$decodedResponse = json_decode($comments);
+
+		if(json_last_error()){
+		    throw new Exception($this->MojoAPI->decodeError(json_last_error()));
+	    }else{
+		    return $decodedResponse;
+	    }
+	}
+
+	public function GetTicketsInQueueByStatus($queueID, $status){
+		if(!is_numeric($queueID)){
+			throw new Exception('Passed Queue ID is not numberic.');
+		}
+		if(!is_array($status)){
+			throw new Exception('Passed Status must be an array. For a list of valid ticket statuses, call GetTicketStatusOptions().');	
+		}
+
+	}
+
 	//completed
 	public function GetTicketStatusOptions(){
 		$ticketStatus = array();
@@ -100,111 +230,6 @@ class Tickets extends MojoAPI
 
 	public function FormatTicketTime($time){
 		return date("Y-m-d\TH:i:s\Z",strtotime($time));
-	}
-
-	public function ListTicketsByStatus($ticketStatus, $sortField="created_on", $perPage=25,$offset=0){
-		if(!is_array($ticketStatus)){
-			throw new Exception("Array must be passed. For valid list of ticket options, call GetTicketStatusOptions()");
-		}
-		
-		$url = $this->MojoAPI->GetSiteURL().'/api/tickets/search.json?query=status.id:('.implode(',', $ticketStatus).')'.$ticketID.'.json?access_key='.$this->MojoAPI->GetAPIKey().'&per_page='.$perPage.'&page='.$offset.'&sf='.$sortField.'&r=1';
-		$tickets = $this->MojoAPI->MakeGetCall($url);
-
-		$decodedResponse = json_decode($tickets);
-
-		if(json_last_error()){
-		    throw new Exception($this->MojoAPI->decodeError(json_last_error()));
-	    }else{
-		    return $decodedResponse;
-	    }
-	}
-
-	public function SearchForTickets($ticketStatus, $sortField="created_on", $perPage=25,$offset=0){
-		if(!is_array($ticketStatus)){
-			throw new Exception("Array must be passed. For valid list of ticket options, call GetTicketStatusOptions()");
-		}
-		
-		$url = $this->MojoAPI->GetSiteURL().'/api/tickets/search.json?query=status.id:('.implode(',', $ticketStatus).')'.$ticketID.'.json?access_key='.$this->MojoAPI->GetAPIKey().'&per_page='.$perPage.'&page='.$offset.'&sf='.$sortField.'&r=1';
-		$tickets = $this->MojoAPI->MakeGetCall($url);
-
-		$decodedResponse = json_decode($tickets);
-
-		if(json_last_error()){
-		    throw new Exception($this->MojoAPI->decodeError(json_last_error()));
-	    }else{
-		    return $decodedResponse;
-	    }
-	}
-
-	//completed
-	public function GetTicketByID($ticketID){
-		if(!is_numeric($ticketID)){
-			throw new Exception('Passed Ticket ID is not numberic.');
-		}
-		$url = $this->MojoAPI->GetSiteURL().'/api/tickets/'.$ticketID.'.json?access_key='.$this->MojoAPI->GetAPIKey().'&per_page='.$perPage.'&page='.$offset;
-		$tickets = $this->MojoAPI->MakeGetCall($url);
-
-		$decodedResponse = json_decode($tickets);
-
-		if(json_last_error()){
-		    throw new Exception($this->MojoAPI->decodeError(json_last_error()));
-	    }else{
-		    return $decodedResponse;
-	    }
-	}
-	//completed
-	public function GetTicketComments($ticketID){
-		if(!is_numeric($ticketID)){
-			throw new Exception('Passed Ticket ID is not numberic.');
-		}
-		$url = $this->MojoAPI->GetSiteURL().'/api/tickets/'.$ticketID.'/comments.json?access_key='.$this->MojoAPI->GetAPIKey();
-		$comments = $this->MojoAPI->MakeGetCall($url);
-		$decodedResponse = json_decode($comments);
-
-		if(json_last_error()){
-		    throw new Exception($this->MojoAPI->decodeError(json_last_error()));
-	    }else{
-		    return $decodedResponse;
-	    }
-
-	}
-	//completed
-	public function GetTicketQueues($perPage=25,$offset=0){
-		$url = $this->MojoAPI->GetSiteURL().'/api/ticket_queues.json?access_key='.$this->MojoAPI->GetAPIKey().'&per_page='.$perPage.'&page='.$offset;
-		$comments = $this->MojoAPI->MakeGetCall($url);
-		$decodedResponse = json_decode($comments);
-
-		if(json_last_error()){
-		    throw new Exception($this->MojoAPI->decodeError(json_last_error()));
-	    }else{
-		    return $decodedResponse;
-	    }
-
-	}
-	//completed
-	public function GetAllTicketsInQueue($queueID){
-		if(!is_numeric($queueID)){
-			throw new Exception('Passed Queue ID is not numberic.');
-		}
-		$url = $this->MojoAPI->GetSiteURL().'/api/ticket_queues/'.$queueID.'.json?access_key='.$this->MojoAPI->GetAPIKey();
-		$comments = $this->MojoAPI->MakeGetCall($url);
-		$decodedResponse = json_decode($comments);
-
-		if(json_last_error()){
-		    throw new Exception($this->MojoAPI->decodeError(json_last_error()));
-	    }else{
-		    return $decodedResponse;
-	    }
-	}
-
-	public function GetTicketsInQueueByStatus($queueID, $status){
-		if(!is_numeric($queueID)){
-			throw new Exception('Passed Queue ID is not numberic.');
-		}
-		if(!is_array($status)){
-			throw new Exception('Passed Status must be an array. For a list of valid ticket statuses, call GetTicketStatusOptions().');	
-		}
-
 	}
 
 }
